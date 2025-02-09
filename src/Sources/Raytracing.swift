@@ -22,13 +22,15 @@ struct Raytracing {
 
         let materialGround = Lambertian(albedo: Color(x: 0.8, y: 0.8, z: 0.0))
         let materialCenter = Lambertian(albedo: Color(x: 0.1, y: 0.2, z: 0.5))
-        let materialLeft   = Metal(albedo: Color(x: 0.8, y: 0.8, z: 0.8), fuzz: 0.3)
+        let materialLeft   = Dielectric(refractionIndex: 1.50)
+        let materialBubble = Dielectric(refractionIndex: 1.00 / 1.50)
         let materialRight  = Metal(albedo: Color(x: 0.8, y: 0.6, z: 0.2), fuzz: 1.0)
 
         let world = HittableList()
         world.add(object: Sphere(center: Point3(x:  0, y: -100.5, z: -1.0), radius: 100.0, material: materialGround))
         world.add(object: Sphere(center: Point3(x:  0, y:    0.0, z: -1.2), radius:   0.5, material: materialCenter))
         world.add(object: Sphere(center: Point3(x: -1, y:    0.0, z: -1.0), radius:   0.5, material: materialLeft))
+        world.add(object: Sphere(center: Point3(x: -1, y:    0.0, z: -1.0), radius:   0.4, material: materialBubble))
         world.add(object: Sphere(center: Point3(x:  1, y:    0.0, z: -1.0), radius:   0.5, material: materialRight))
 
         // Camera

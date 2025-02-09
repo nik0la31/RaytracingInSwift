@@ -113,6 +113,13 @@ class Vector3 : CustomStringConvertible {
         return v - 2 * Vector3.dot(u: v, v: n) * n
     }
 
+    static func refract(uv : Vector3, n : Vector3, etaiOverEtat : Float) -> Vector3 {
+        let cosTheta : Float = min(dot(u: -uv, v: n), 1.0)
+        let rOutPerp : Vector3 = etaiOverEtat * (uv + cosTheta * n)
+        let rOutParallel : Vector3 = -abs(1.0 - rOutPerp.lengthSquared()).squareRoot() * n
+        return rOutPerp + rOutParallel
+    }
+
     func lengthSquared() -> Float {
         return x * x + y * y + z * z
     }
