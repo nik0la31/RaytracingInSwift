@@ -1,6 +1,7 @@
 struct HitRecord {
     var point = Point3()
     var normal = Vector3()
+    var material : Material? = nil
     var t : Float = 0
     var isFronFace : Bool = true
 

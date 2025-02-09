@@ -1,10 +1,12 @@
 class Sphere : Hittable {
-    var center : Point3;
-    var radius : Float;
+    private var center : Point3
+    private var radius : Float
+    private let material : Material
 
-    init(center : Point3, radius : Float) {
+    init(center : Point3, radius : Float, material : Material) {
         self.center = center
         self.radius = max(0.0, radius)
+        self.material = material
     } 
 
     func hit(ray : Ray, t: Interval, hit : inout HitRecord) -> Bool {
@@ -33,6 +35,7 @@ class Sphere : Hittable {
         hit.point = ray.at(t: hit.t)
         let outwardNormal = (hit.point - center) / radius
         hit.setFaceNormal(ray: ray, outwardNormal: outwardNormal)
+        hit.material = material
 
         return true
     }

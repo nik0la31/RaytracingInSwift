@@ -48,8 +48,12 @@ class Camera {
 
         var hit = HitRecord()
         if (world.hit(ray: ray, t: Interval(min: 0.001, max: Raytracing.infinity), hit: &hit)) {
-            let direction = hit.normal + Vector3.randomUnitVector()
-            return 0.5 * rayColor(ray: Ray(origin: hit.point, direction: direction), depth: depth - 1, world: world)
+            var scattered = Ray()
+            var attenuation = Color()
+            if (hit.material!.scatter(rayIn: ray, hit: hit, attenuation: &attenuation, scatteredRay: &scattered)) {
+                return attenuation * rayColor(ray: scattered, depth: depth-1, world: world)
+            }
+            return Color()
         }
 
         let unitDirection = Vector3.unitVector(v: ray.direction)
@@ -64,17 +68,17 @@ class Camera {
         let offset : Vector3 = sampleSquare();
         let pixelSample : Vector3 = pixel00Loc
                           + ((Float(col) + offset.x) * pixelDeltaU)
-                          + ((Float(row) + offset.y) * pixelDeltaV);
+                          + ((Float(row) + offset.y) * pixelDeltaV)
 
         let rayOrigin : Vector3 = center;
         let rayDirection : Vector3 = pixelSample - rayOrigin;
 
-        return Ray(origin: rayOrigin, direction: rayDirection);
+        return Ray(origin: rayOrigin, direction: rayDirection)
     }
 
     private func sampleSquare() -> Vector3 {
         // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
-        return Vector3(x: Raytracing.randomFloat() - 0.5, y: Raytracing.randomFloat() - 0.5, z: 0);
+        return Vector3(x: Raytracing.randomFloat() - 0.5, y: Raytracing.randomFloat() - 0.5, z: 0)
     }
 
     func render(world : Hittable) {

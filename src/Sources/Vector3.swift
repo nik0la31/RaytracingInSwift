@@ -109,12 +109,22 @@ class Vector3 : CustomStringConvertible {
         }
     }
 
+    static func reflect(v : Vector3, n: Vector3) -> Vector3 {
+        return v - 2 * Vector3.dot(u: v, v: n) * n
+    }
+
     func lengthSquared() -> Float {
         return x * x + y * y + z * z
     }
 
     func length() -> Float {
         return lengthSquared().squareRoot()
+    }
+
+    func nearZero() -> Bool {
+        // Return true if the vector is close to zero in all dimensions.
+        let s : Float = 1e-8;
+        return (abs(x) < s) && (abs(y) < s) && (abs(z) < s)
     }
 
     public var description: String { return "\(x) \(y) \(z)" }
