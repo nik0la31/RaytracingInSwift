@@ -109,6 +109,18 @@ class Vector3 : CustomStringConvertible {
         }
     }
 
+    static func randomInUnitDisk() -> Vector3 {
+        while (true) {
+            let p = Vector3(
+                x: Raytracing.randomFloat(min: -1, max: 1),
+                y: Raytracing.randomFloat(min: -1, max: 1),
+                z: 0);
+            if (p.lengthSquared() < 1) {
+                return p
+            }
+        }
+    }
+
     static func reflect(v : Vector3, n: Vector3) -> Vector3 {
         return v - 2 * Vector3.dot(u: v, v: n) * n
     }

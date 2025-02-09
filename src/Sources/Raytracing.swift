@@ -45,6 +45,9 @@ struct Raytracing {
         cam.lookat = Point3(x: 0, y: 0, z: -1)
         cam.vup = Vector3(x: 0, y: 1, z: 0)
 
+        cam.defocusAngle = 10.0
+        cam.focusDist = 3.4
+
         // Render
         cam.render(world: world)
     }

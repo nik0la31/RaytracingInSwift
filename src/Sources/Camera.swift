@@ -10,6 +10,8 @@ class Camera {
     var lookfrom = Point3(x: 0, y: 0, z: 0) // Point camera is looking from
     var lookat = Point3(x: 0, y: 0, z: -1)  // Point camera is looking at
     var vup = Vector3(x: 0, y: 1, z: 0)     // Camera-relative "up" direction
+    var defocusAngle : Float = 0            // Variation angle of rays through each pixel
+    var focusDist : Float = 10              // Distance from camera lookfrom point to plane of perfect focus
 
     private var imageHeight = 0             // Rendered image height
     private var center = Point3()           // Camera center
@@ -19,8 +21,10 @@ class Camera {
     private var u = Vector3()               // Camera frame basis vectors
     private var v = Vector3()
     private var w = Vector3()
-    private var pixelSamplesScale = Float(1) // Color scale factor for a sum of pixel samples
-
+    private var defocusDiskU = Vector3()    // Defocus disk horizontal radius
+    private var defocusDiskV = Vector3()    // Defocus disk vertical radius
+    private var pixelSamplesScale = Float(1)// Color scale factor for a sum of pixel samples
+    
     private func initialize() {
         imageHeight = Int((Float(imageWidth) / aspectRatio))
         imageHeight = (imageHeight < 1) ? 1 : imageHeight
@@ -30,10 +34,9 @@ class Camera {
         center = lookfrom
 
         // Determine viewport dimensions.
-        let focalLength : Float = (lookfrom - lookat).length()
         let theta : Float = Raytracing.degreesToRadians(degrees: vfov)
         let h : Float = tan(theta / 2)
-        let viewportHeight = 2 * h * focalLength
+        let viewportHeight = 2 * h * focusDist
         let viewportWidth = viewportHeight * (Float(imageWidth)/Float(imageHeight))
 
         // Calculate the u,v,w unit basis vectors for the camera coordinate frame.
@@ -51,9 +54,13 @@ class Camera {
 
         // Calculate the location of the upper left pixel.
         let viewportUpperLeft =
-            center - focalLength * w - viewportU / 2.0 - viewportV / 2.0
+            center - focusDist * w - viewportU / 2.0 - viewportV / 2.0
         pixel00Loc = viewportUpperLeft + 0.5 * (pixelDeltaU + pixelDeltaV)
 
+        // Calculate the camera defocus disk basis vectors.
+        let defocusRadius = focusDist * tan(Raytracing.degreesToRadians(degrees: defocusAngle / 2))
+        defocusDiskU = u * defocusRadius
+        defocusDiskV = v * defocusRadius
     }
 
     private func rayColor(ray : Ray, depth: Int, world : Hittable) -> Color {
@@ -79,15 +86,15 @@ class Camera {
 
     private func getRay(row: Int, col: Int) -> Ray {
         // Construct a camera ray originating from the origin and directed at randomly sampled
-        // point around the pixel location i, j.
+        // point around the pixel location row, col.
 
         let offset : Vector3 = sampleSquare();
         let pixelSample : Vector3 = pixel00Loc
                           + ((Float(col) + offset.x) * pixelDeltaU)
                           + ((Float(row) + offset.y) * pixelDeltaV)
 
-        let rayOrigin : Vector3 = center;
-        let rayDirection : Vector3 = pixelSample - rayOrigin;
+        let rayOrigin : Vector3 = (defocusAngle <= 0) ? center : defocusDiskSample() 
+        let rayDirection : Vector3 = pixelSample - rayOrigin
 
         return Ray(origin: rayOrigin, direction: rayDirection)
     }
@@ -95,6 +102,12 @@ class Camera {
     private func sampleSquare() -> Vector3 {
         // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
         return Vector3(x: Raytracing.randomFloat() - 0.5, y: Raytracing.randomFloat() - 0.5, z: 0)
+    }
+
+    private func defocusDiskSample() -> Point3 {
+        // Returns a random point in the camera defocus disk.
+        let p = Vector3.randomInUnitDisk()
+        return center + (p.x * defocusDiskU) + (p.y * defocusDiskV)
     }
 
     func render(world : Hittable) {
