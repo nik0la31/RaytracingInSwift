@@ -11,3 +11,11 @@ This project implements brute force ray tracing following [Ray Tracing in One We
 ## Why Swift?
 
 While the topic is familiar, Swift is new to me. This project serves as a hands-on way to learn the language while working on a concept I enjoy.
+
+## How to Run
+
+To compile and run the ray tracer in release mode, use the following command:
+
+```sh
+swift run --configuration release Raytracing > image.ppm
+```
