@@ -74,6 +74,41 @@ class Vector3 : CustomStringConvertible {
         return v / v.length()
     }
 
+    static func random() -> Vector3 {
+        return Vector3(
+            x: Raytracing.randomFloat(),
+            y: Raytracing.randomFloat(),
+            z: Raytracing.randomFloat())
+    }
+
+    static func random(min : Float, max : Float) -> Vector3 {
+        return Vector3(
+            x: Raytracing.randomFloat(min: min, max: max),
+            y: Raytracing.randomFloat(min: min, max: max),
+            z: Raytracing.randomFloat(min: min, max: max))
+    }
+
+    static func randomUnitVector() -> Vector3 {
+        while (true) {
+            let p = Vector3.random(min: -1, max: 1)
+            let lensq = p.lengthSquared()
+            if (1e-20 < lensq && lensq <= 1) {
+                return p / lensq.squareRoot()
+            }
+        }
+    }
+
+    static func randomOnHemisphere(normal: Vector3) -> Vector3 {
+        let onUnitSphere = randomUnitVector()
+        if (Vector3.dot(u: onUnitSphere, v: normal) > 0.0) {
+            // In the same hemisphere as the normal
+            return onUnitSphere
+        }
+        else {
+            return -onUnitSphere
+        }
+    }
+
     func lengthSquared() -> Float {
         return x * x + y * y + z * z
     }

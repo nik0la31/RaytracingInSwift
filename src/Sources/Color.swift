@@ -1,9 +1,17 @@
 typealias Color = Vector3
 
+func linearToGamma(linearComponent : Float) -> Float {
+    if (linearComponent > 0) {
+        return linearComponent.squareRoot()
+    }
+    
+    return 0
+}
+
 func printColor(pixelColor : Color) {
-    let r = pixelColor.x;
-    let g = pixelColor.y;
-    let b = pixelColor.z;
+    let r = linearToGamma(linearComponent: pixelColor.x)
+    let g = linearToGamma(linearComponent: pixelColor.y)
+    let b = linearToGamma(linearComponent: pixelColor.z)
 
     // Translate the [0,1] component values to the byte range [0,255].
     let intensity = Interval(min: 0.000, max: 0.999)

@@ -3,6 +3,7 @@ class Camera {
     var aspectRatio : Float = 16.0 / 9.0    // Ratio of image width over height
     var imageWidth = 256                    // Rendered image width in pixel count
     var samplePerPixel = 10                 // Count of random samples for each pixel
+    var maxDepth = 10                       // Maximum number of ray bounces into scene
 
     private var imageHeight = 0             // Rendered image height
     private var center = Point3()           // Camera center
@@ -39,10 +40,16 @@ class Camera {
 
     }
 
-    private func rayColor(ray : Ray, world : Hittable) -> Color {
+    private func rayColor(ray : Ray, depth: Int, world : Hittable) -> Color {
+        if (depth <= 0) {
+            // If we've exceeded the ray bounce limit, no more light is gathered.
+            return Color()
+        }
+
         var hit = HitRecord()
-        if (world.hit(ray: ray, t: Interval(min: 0, max: Raytracing.infinity), hit: &hit)) {
-            return 0.5 * (hit.normal + Color(x: 1.0, y: 1, z: 1))
+        if (world.hit(ray: ray, t: Interval(min: 0.001, max: Raytracing.infinity), hit: &hit)) {
+            let direction = hit.normal + Vector3.randomUnitVector()
+            return 0.5 * rayColor(ray: Ray(origin: hit.point, direction: direction), depth: depth - 1, world: world)
         }
 
         let unitDirection = Vector3.unitVector(v: ray.direction)
@@ -82,7 +89,7 @@ class Camera {
                 var pixelColor = Color()
                 for _ in 1...samplePerPixel {
                     let ray : Ray = getRay(row: row, col: col)
-                    pixelColor += rayColor(ray: ray, world: world)
+                    pixelColor += rayColor(ray: ray, depth: maxDepth, world: world)
                 }
 
                 printColor( pixelColor: pixelSamplesScale * pixelColor )
