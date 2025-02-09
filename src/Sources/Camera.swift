@@ -2,16 +2,20 @@ class Camera {
 
     var aspectRatio : Float = 16.0 / 9.0    // Ratio of image width over height
     var imageWidth = 256                    // Rendered image width in pixel count
+    var samplePerPixel = 10                 // Count of random samples for each pixel
 
     private var imageHeight = 0             // Rendered image height
     private var center = Point3()           // Camera center
     private var pixel00Loc = Point3()       // Location of pixel 0, 0
     private var pixelDeltaU = Vector3()     // Offset to pixel to the right
     private var pixelDeltaV = Vector3()     // Offset to pixel below
+    private var pixelSamplesScale = Float(1)// Color scale factor for a sum of pixel samples
 
     private func initialize() {
         imageHeight = Int((Float(imageWidth) / aspectRatio))
         imageHeight = (imageHeight < 1) ? 1 : imageHeight
+
+        pixelSamplesScale = 1.0 / Float(samplePerPixel)
 
         center = Point3(x: 0, y: 0, z: 0)
 
@@ -46,6 +50,26 @@ class Camera {
         return (1.0 - a) * Color(x: 1.0, y: 1.0, z: 1.0) + a * Color(x: 0.5, y: 0.7, z: 1.0)
     }
 
+    private func getRay(row: Int, col: Int) -> Ray {
+        // Construct a camera ray originating from the origin and directed at randomly sampled
+        // point around the pixel location i, j.
+
+        let offset : Vector3 = sampleSquare();
+        let pixelSample : Vector3 = pixel00Loc
+                          + ((Float(col) + offset.x) * pixelDeltaU)
+                          + ((Float(row) + offset.y) * pixelDeltaV);
+
+        let rayOrigin : Vector3 = center;
+        let rayDirection : Vector3 = pixelSample - rayOrigin;
+
+        return Ray(origin: rayOrigin, direction: rayDirection);
+    }
+
+    private func sampleSquare() -> Vector3 {
+        // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
+        return Vector3(x: Raytracing.randomFloat() - 0.5, y: Raytracing.randomFloat() - 0.5, z: 0);
+    }
+
     func render(world : Hittable) {
         initialize()
 
@@ -55,12 +79,13 @@ class Camera {
 
         for row in 1...imageHeight {
             for col in 1...imageWidth {
-                let pixelCenter = pixel00Loc + (Float(col) * pixelDeltaU) + (Float(row) * pixelDeltaV)
-                let rayDirection = pixelCenter - center
-                let ray = Ray(origin: center, direction: rayDirection);
+                var pixelColor = Color()
+                for _ in 1...samplePerPixel {
+                    let ray : Ray = getRay(row: row, col: col)
+                    pixelColor += rayColor(ray: ray, world: world)
+                }
 
-                let pixelColor : Color = rayColor(ray: ray, world: world)
-                printColor( pixelColor: pixelColor )
+                printColor( pixelColor: pixelSamplesScale * pixelColor )
             }
         }
     }

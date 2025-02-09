@@ -8,6 +8,14 @@ struct Raytracing {
         return degrees * pi / 180
     }
 
+    static func randomFloat() -> Float {
+        return Float.random(in: 0.0 ..< 1.0)
+    }
+
+    static func randomFloat(min : Float, max : Float) -> Float {
+        return Float.random(in: min ..< max)
+    }
+
     static func main() {
     
         // World
@@ -19,6 +27,7 @@ struct Raytracing {
         let cam = Camera()
         cam.aspectRatio = 16.0 / 9.0
         cam.imageWidth = 400
+        cam.samplePerPixel = 100
 
         // Render
         cam.render(world: world)

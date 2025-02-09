@@ -26,4 +26,16 @@ struct Interval {
     func surrounds(x: Float) -> Bool {
         return min < x && x < max
     }
+
+    func clamp(x: Float) -> Float {
+        if (x < min) {
+            return min
+        }
+
+        if (x > max) {
+            return max
+        }
+
+        return x
+    }
 }
