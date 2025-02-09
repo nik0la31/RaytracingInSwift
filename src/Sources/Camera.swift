@@ -1,16 +1,25 @@
+import Foundation
+
 class Camera {
 
     var aspectRatio : Float = 16.0 / 9.0    // Ratio of image width over height
     var imageWidth = 256                    // Rendered image width in pixel count
     var samplePerPixel = 10                 // Count of random samples for each pixel
     var maxDepth = 10                       // Maximum number of ray bounces into scene
+    var vfov : Float = 90                   // Vertical view angle (field of view)
+    var lookfrom = Point3(x: 0, y: 0, z: 0) // Point camera is looking from
+    var lookat = Point3(x: 0, y: 0, z: -1)  // Point camera is looking at
+    var vup = Vector3(x: 0, y: 1, z: 0)     // Camera-relative "up" direction
 
     private var imageHeight = 0             // Rendered image height
     private var center = Point3()           // Camera center
     private var pixel00Loc = Point3()       // Location of pixel 0, 0
     private var pixelDeltaU = Vector3()     // Offset to pixel to the right
     private var pixelDeltaV = Vector3()     // Offset to pixel below
-    private var pixelSamplesScale = Float(1)// Color scale factor for a sum of pixel samples
+    private var u = Vector3()               // Camera frame basis vectors
+    private var v = Vector3()
+    private var w = Vector3()
+    private var pixelSamplesScale = Float(1) // Color scale factor for a sum of pixel samples
 
     private func initialize() {
         imageHeight = Int((Float(imageWidth) / aspectRatio))
@@ -18,16 +27,23 @@ class Camera {
 
         pixelSamplesScale = 1.0 / Float(samplePerPixel)
 
-        center = Point3(x: 0, y: 0, z: 0)
+        center = lookfrom
 
         // Determine viewport dimensions.
-        let focalLength : Float = 1.0
-        let viewportHeight : Float = 2.0
+        let focalLength : Float = (lookfrom - lookat).length()
+        let theta : Float = Raytracing.degreesToRadians(degrees: vfov)
+        let h : Float = tan(theta / 2)
+        let viewportHeight = 2 * h * focalLength
         let viewportWidth = viewportHeight * (Float(imageWidth)/Float(imageHeight))
 
+        // Calculate the u,v,w unit basis vectors for the camera coordinate frame.
+        w = Vector3.unitVector(v: lookfrom - lookat)
+        u = Vector3.unitVector(v: Vector3.cross(u: vup, v: w))
+        v = Vector3.cross(u: w, v: u)
+
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
-        let viewportU = Vector3(x: viewportWidth, y: 0, z: 0)
-        let viewportV = Vector3(x: 0, y: -viewportHeight, z: 0)
+        let viewportU = viewportWidth * u       // Vector across viewport horizontal edge
+        let viewportV = viewportHeight * (-v)   // Vector down viewport vertical edge
 
         // Calculate the horizontal and vertical delta vectors from pixel to pixel.
         pixelDeltaU = viewportU / Float(imageWidth)
@@ -35,7 +51,7 @@ class Camera {
 
         // Calculate the location of the upper left pixel.
         let viewportUpperLeft =
-            center - Vector3(x: 0, y: 0, z: focalLength) - viewportU / 2.0 - viewportV / 2.0
+            center - focalLength * w - viewportU / 2.0 - viewportV / 2.0
         pixel00Loc = viewportUpperLeft + 0.5 * (pixelDeltaU + pixelDeltaV)
 
     }

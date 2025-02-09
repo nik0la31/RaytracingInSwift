@@ -40,6 +40,11 @@ struct Raytracing {
         cam.samplePerPixel = 100
         cam.maxDepth = 50
 
+        cam.vfov = 20
+        cam.lookfrom = Point3(x:-2, y: 2, z: 1)
+        cam.lookat = Point3(x: 0, y: 0, z: -1)
+        cam.vup = Vector3(x: 0, y: 1, z: 0)
+
         // Render
         cam.render(world: world)
     }
