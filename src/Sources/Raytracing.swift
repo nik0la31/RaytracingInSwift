@@ -1,7 +1,34 @@
 @main
 struct Raytracing {
 
-    static func rayColor(r : Ray) -> Color {
+    static let infinity : Float = Float.greatestFiniteMagnitude
+    static let pi : Float = 3.1415926535897932385
+
+    static func degreesToRadians(degrees : Float) -> Float {
+        return degrees * pi / 180
+    }
+
+    static func hitSphere(center : Point3, radius : Float, r : Ray) -> Float {
+        let oc : Vector3 = center - r.origin
+        let a : Float = r.direction.lengthSquared()
+        let h : Float = Vector3.dot(u: r.direction, v: oc)
+        let c : Float = oc.lengthSquared() - radius * radius
+        let discriminant = h * h - a * c
+        
+        if (discriminant < 0) {
+            return -1.0
+        }
+        else {
+            return (h - discriminant.squareRoot()) / a
+        }
+    }
+
+    static func rayColor(r : Ray, world : Hittable) -> Color {
+        var hit = HitRecord()
+        if (world.hit(ray: r, t: Interval(min: 0, max: Raytracing.infinity), hit: &hit)) {
+            return 0.5 * (hit.normal + Color(x: 1.0, y: 1, z: 1))
+        }
+
         let unitDirection = Vector3.unitVector(v: r.direction)
         let a = 0.5 * (unitDirection.y + 1.0)
         return (1.0 - a) * Color(x: 1.0, y: 1.0, z: 1.0) + a * Color(x: 0.5, y: 0.7, z: 1.0)
@@ -17,6 +44,12 @@ struct Raytracing {
         // Calculate the image height, and ensure that it's at least 1.
         var imageHeight = Int((Float(imageWidth) / aspectRatio))
         imageHeight = (imageHeight < 1) ? 1 : imageHeight
+
+        // World
+
+        let world = HittableList()
+        world.add(object: Sphere(center: Point3(x: 0, y: 0, z: -1), radius: 0.5))
+        world.add(object: Sphere(center: Point3(x: 0, y: -100.5, z: -1), radius: 100))
 
         // Camera
 
@@ -50,7 +83,7 @@ struct Raytracing {
                 let rayDirection = pixelCenter - cameraCenter
                 let r = Ray(origin: cameraCenter, direction: rayDirection);
 
-                let pixelColor : Color = Raytracing.rayColor(r: r)
+                let pixelColor : Color = Raytracing.rayColor(r: r, world: world)
                 printColor( pixelColor: pixelColor )
             }
         }
